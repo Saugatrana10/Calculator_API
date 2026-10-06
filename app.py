@@ -8,7 +8,9 @@ CORS(app)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
+@app.route('/')
+def my_api():
+    return 'This is my first API'
 
 @app.route('/calculate')
 def calculate():
