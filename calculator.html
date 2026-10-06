@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculator</title>
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Segoe UI", system-ui, Arial, sans-serif;
+    background: #1e2a38;
+    color: #1e2a38;
+    padding: 1rem;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 380px;
+    background: #f5f7fa;
+    border-radius: 14px;
+    padding: 1.75rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  }
+
+  h1 {
+    margin: 0 0 1.25rem;
+    font-size: 1.5rem;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  input {
+    width: 100%;
+    padding: 0.7rem 0.8rem;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    border: 2px solid #c9d2dc;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  input:focus {
+    outline: none;
+    border-color: #2f7de1;
+  }
+
+  .ops {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .ops button {
+    padding: 0.7rem 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+    border: 2px solid #c9d2dc;
+    border-radius: 8px;
+    background: #fff;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .ops button.active {
+    background: #2f7de1;
+    border-color: #2f7de1;
+    color: #fff;
+  }
+
+  .go {
+    width: 100%;
+    padding: 0.85rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    background: #1e2a38;
+    color: #fff;
+    cursor: pointer;
+  }
+
+  .go:hover { background: #2c3e52; }
+
+  button:focus-visible { outline: 3px solid #2f7de1; outline-offset: 2px; }
+
+  #out {
+    min-height: 3rem;
+    margin: 1.25rem 0 0;
+    padding: 0.8rem;
+    border-radius: 8px;
+    font-size: 1.15rem;
+    font-weight: 600;
+    text-align: center;
+    background: #e8edf3;
+  }
+
+  #out.error { background: #fde8e8; color: #b42318; }
+  #out.ok { background: #e3f6ea; color: #17623a; }
+</style>
+</head>
+<body>
+  <main class="card">
+    <h1>Calculator</h1>
+
+    <label for="num1">First number</label>
+    <input id="num1" type="number" placeholder="e.g. 10">
+
+    <label for="num2">Second number</label>
+    <input id="num2" type="number" placeholder="e.g. 5">
+
+    <label>Operator</label>
+    <div class="ops" id="ops">
+      <button type="button" data-op="+">+</button>
+      <button type="button" data-op="-">&minus;</button>
+      <button type="button" data-op="*">&times;</button>
+      <button type="button" data-op="/">&divide;</button>
+    </div>
+
+    <button class="go" onclick="calculate()">Calculate</button>
+    <p id="out">Result appears here</p>
+  </main>
+
+<script>
+  let op = '+';
+
+  const opButtons = document.querySelectorAll('#ops button');
+  function selectOp(value) {
+    op = value;
+    opButtons.forEach(b => b.classList.toggle('active', b.dataset.op === value));
+  }
+  opButtons.forEach(b => b.addEventListener('click', () => selectOp(b.dataset.op)));
+  selectOp('+');
+
+  async function calculate() {
+    const out = document.getElementById('out');
+    out.className = '';
+    try {
+      const params = new URLSearchParams({
+        a: document.getElementById('num1').value,
+        b: document.getElementById('num2').value,
+        op: op
+      });
+
+      const res = await fetch(`http://127.0.0.1:5000/calculate?${params}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        out.textContent = data.error;
+        out.className = 'error';
+        return;
+      }
+      out.textContent = `${data.first} ${data.operation} ${data.second} = ${data.result}`;
+      out.className = 'ok';
+    } catch (err) {
+      out.textContent = `Cannot reach the API: ${err.message}`;
+      out.className = 'error';
+    }
+  }
+</script>
+</body>
+</html>
